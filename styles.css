@@ -4,6 +4,15 @@
 .container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 .section { padding: 48px 0; }
 
+/* Text justification */
+#about p {
+  text-align: justify;
+}
+
+.card p {
+  text-align: justify;
+}
+
 /* Skip link for keyboard users */
 .skip-link {
   position: absolute; left: -999px; top: -999px; background: #f8f9fa; color: #2d3748; padding: .5rem 1rem;
@@ -188,4 +197,5 @@ a:hover { text-decoration: underline; }
 }
 @media (max-width: 560px) {
   .cards { grid-template-columns: 1fr; }
+
 }
