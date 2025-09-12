@@ -13,6 +13,33 @@
   text-align: justify;
 }
 
+/* Editor toolbar */
+#editor-toolbar {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 8px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-radius: 999px;
+  padding: 6px 8px;
+  z-index: 1100;
+}
+#editor-toolbar button {
+  border: 1px solid #4299e1;
+  background: linear-gradient(90deg, #4299e1, #3182ce);
+  color: #fff;
+  border-radius: 999px;
+  padding: .5rem .8rem;
+  cursor: pointer;
+}
+#editor-toolbar #reset-button {
+  background: transparent;
+  color: #2d3748;
+}
+
 /* Skip link for keyboard users */
 .skip-link {
   position: absolute; left: -999px; top: -999px; background: #f8f9fa; color: #2d3748; padding: .5rem 1rem;
@@ -26,6 +53,12 @@ body {
 img { max-width: 100%; display: block; border-radius: var(--radius); }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Underline About section email and GitHub links */
+#about a[href^="mailto:"],
+#about a[href*="github.com"] {
+  text-decoration: underline;
+}
 
 /* Header & Nav */
 .site-header {
@@ -197,5 +230,4 @@ a:hover { text-decoration: underline; }
 }
 @media (max-width: 560px) {
   .cards { grid-template-columns: 1fr; }
-
 }
