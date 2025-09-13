@@ -1,6 +1,8 @@
-// Simple inline editor with localStorage persistence
+// Inline editor with contenteditable and localStorage persistence
 (function () {
   const STORAGE_KEY = 'siteInlineEdits.v1';
+  const THEME_KEY = 'siteTheme.v1';
+  let isEditMode = false;
 
   /**
    * Map of editable targets.
@@ -72,47 +74,74 @@
     return labels[idx];
   }
 
-  function handleEditFlow() {
-    // Step 1: choose section group
-    const groups = {
-      'Hero': ['Hero title', 'Hero lead'],
-      'About': ['About paragraph'],
-      'Projects': [
-        'Project 1 title', 'Project 1 description',
-        'Project 2 title', 'Project 2 description',
-        'Project 3 title', 'Project 3 description'
-      ],
-      'Skills': ['Skills list'],
-      'Contact': ['Contact email text'],
-      'Footer': ['Footer name']
-    };
-
-    const groupLabel = promptSelect(groups, 'Select a section to edit');
-    if (!groupLabel) return;
-
-    const parts = groups[groupLabel];
-    const partMap = parts.reduce((acc, label) => { acc[label] = EDITABLE_TARGETS[label]; return acc; }, {});
-    const partLabel = promptSelect(partMap, `Select which part of ${groupLabel} to edit`);
-    if (!partLabel) return;
-
-    const selector = EDITABLE_TARGETS[partLabel];
-    const el = document.querySelector(selector);
-    if (!el) {
-      alert('Sorry, that element was not found on the page.');
-      return;
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const editBtn = document.getElementById('edit-button');
+    
+    if (isEditMode) {
+      editBtn.textContent = 'Exit Edit';
+      editBtn.style.background = '#e53e3e';
+      enableInlineEditing();
+    } else {
+      editBtn.textContent = 'Edit content';
+      editBtn.style.background = 'linear-gradient(90deg, #4299e1, #3182ce)';
+      disableInlineEditing();
     }
+  }
 
-    const currentValue = selector.includes('.chips')
-      ? Array.from(el.querySelectorAll('li')).map((li) => li.textContent).join(', ')
-      : el.textContent;
+  function enableInlineEditing() {
+    // Add edit mode class to body
+    document.body.classList.add('edit-mode');
+    
+    // Make all editable elements contenteditable
+    Object.values(EDITABLE_TARGETS).forEach(selector => {
+      const el = document.querySelector(selector);
+      if (el) {
+        el.setAttribute('contenteditable', 'true');
+        el.setAttribute('data-original-content', el.textContent);
+        
+        // Add event listeners for real-time saving
+        el.addEventListener('blur', () => saveElementContent(el, selector));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            el.blur();
+          }
+        });
+      }
+    });
+  }
 
-    const userValue = prompt('Enter the new content' + (selector.includes('.chips') ? ' (comma-separated list)' : ''), currentValue || '');
-    if (userValue == null) return;
+  function disableInlineEditing() {
+    // Remove edit mode class from body
+    document.body.classList.remove('edit-mode');
+    
+    // Remove contenteditable from all elements
+    Object.values(EDITABLE_TARGETS).forEach(selector => {
+      const el = document.querySelector(selector);
+      if (el) {
+        el.removeAttribute('contenteditable');
+        el.removeAttribute('data-original-content');
+        
+        // Remove event listeners
+        el.removeEventListener('blur', () => saveElementContent(el, selector));
+        el.removeEventListener('keydown', () => {});
+      }
+    });
+  }
 
+  function saveElementContent(element, selector) {
     const edits = loadEdits();
-    edits[selector] = userValue;
+    
+    if (selector.includes('.chips')) {
+      // Handle skills list specially
+      const text = element.textContent.trim();
+      edits[selector] = text;
+    } else {
+      edits[selector] = element.textContent;
+    }
+    
     saveEdits(edits);
-    applyEdits();
   }
 
   function handleReset() {
@@ -121,12 +150,40 @@
     location.reload();
   }
 
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem(THEME_KEY, newTheme);
+    
+    // Update theme icon
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+  }
+
+  function loadTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Update theme icon
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+  }
+
   function init() {
+    loadTheme();
     applyEdits();
     const editBtn = document.getElementById('edit-button');
     const resetBtn = document.getElementById('reset-button');
-    if (editBtn) editBtn.addEventListener('click', handleEditFlow);
+    const themeBtn = document.getElementById('theme-toggle');
+    if (editBtn) editBtn.addEventListener('click', toggleEditMode);
     if (resetBtn) resetBtn.addEventListener('click', handleReset);
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
   }
 
   if (document.readyState === 'loading') {
@@ -135,5 +192,6 @@
     init();
   }
 })();
+
 
 
